@@ -1,0 +1,6 @@
+**/node_modules
+**/.next
+**/.env*
+docker/mysql
+services/wp/wp-content/uploads
+.DS_Store

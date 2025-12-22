@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_DATABASE: wp
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/mysql:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:php8.2-apache
+    restart: always
+    depends_on:
+      - db
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp_password
+      WORDPRESS_DB_NAME: wp
+    ports:
+      - "8080:80"
+    volumes:
+      - ./services/wp:/var/www/html
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+    ports:
+      - "8081:80"
