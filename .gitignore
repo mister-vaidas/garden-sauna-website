@@ -4,3 +4,6 @@
 docker/mysql
 services/wp/wp-content/uploads
 .DS_Store
+
+# Local services directory (do not commit)
+services/
