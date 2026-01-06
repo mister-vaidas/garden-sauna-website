@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const categories = await wcGet<any[]>("/products/categories", {
       per_page: 50,
-      hide_empty: true,
+      hide_empty: false,
     });
 
     return NextResponse.json({ ok: true, categories });
