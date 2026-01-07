@@ -16,16 +16,20 @@ type Product = {
 type Category = { id: number; name: string; slug: string; parent: number };
 
 type ProductsGridProps = {
+  category: string; // category ID as string (e.g. "16") or ""
   q: string;
-  page: number;
-  category: string; // expected to be category ID as string (or "")
   sort: string;
+  page: number;
 };
 
-export default function ProductsGrid({ q, page, category, sort }: ProductsGridProps) {
+export default function ProductsGrid({ category, q, sort, page }: ProductsGridProps) {
   const router = useRouter();
 
-  const activeCategoryId = category ? Number(category) : null;
+  const activeCategoryId = useMemo(() => {
+    if (!category) return null;
+    const n = Number(category);
+    return Number.isFinite(n) ? n : null;
+  }, [category]);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,23 +50,16 @@ export default function ProductsGrid({ q, page, category, sort }: ProductsGridPr
     if (data.ok) setCategories(data.categories || []);
   }
 
-  async function loadProducts(opts: {
-    catId?: number | null;
-    q?: string;
-    page?: number;
-    sort?: string;
-  }) {
+  async function loadProducts(opts: { catId?: number | null; q?: string; page?: number; sort?: string }) {
     setLoading(true);
 
     const params = new URLSearchParams();
-
     if (opts.catId) params.set("category", String(opts.catId));
     if (opts.q) params.set("q", opts.q);
     if (opts.page && opts.page > 1) params.set("page", String(opts.page));
     if (opts.sort) params.set("sort", opts.sort);
 
     const url = `/api/products${params.toString() ? `?${params.toString()}` : ""}`;
-
     const res = await fetch(url, { cache: "no-store" });
     const data = await res.json();
 
@@ -74,16 +71,11 @@ export default function ProductsGrid({ q, page, category, sort }: ProductsGridPr
     loadCategories();
   }, []);
 
-  // React to prop changes (server-driven searchParams)
+  // Re-fetch whenever the SERVER-provided search params change
   useEffect(() => {
-    loadProducts({
-      catId: Number.isFinite(activeCategoryId as number) ? activeCategoryId : null,
-      q,
-      page,
-      sort,
-    });
+    loadProducts({ catId: activeCategoryId, q, page, sort });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, q, page, sort]);
+  }, [activeCategoryId, q, page, sort]);
 
   const pushWithParams = (next: Partial<{ category: string; q: string; page: number; sort: string }>) => {
     const params = new URLSearchParams();
